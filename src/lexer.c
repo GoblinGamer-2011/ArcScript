@@ -137,29 +137,33 @@ static Token number(Lexer *l) {
 
 Token lexer_next_token(Lexer *l) {
 
-    while (l->current) {
+    while (1) {
 
-        /* ---- skip junk ---- */
+        /* ---- stop at end ---- */
+        if (!l->current)
+            return make_token(l, TOKEN_EOF, "EOF");
 
-        skip_whitespace(l);
+        /* ---- skip whitespace ---- */
+        if (isspace(l->current)) {
+            skip_whitespace(l);
+            continue;
+        }
 
+        /* ---- skip comments ---- */
         if (l->current == '/' && peek(l) == '/') {
             skip_comment(l);
             continue;
         }
 
         /* ---- identifiers ---- */
-
         if (isalpha(l->current) || l->current == '_')
             return identifier(l);
 
         /* ---- numbers ---- */
-
         if (isdigit(l->current))
             return number(l);
 
-        /* ---- operators / symbols ---- */
-
+        /* ---- operators ---- */
         switch (l->current) {
 
             case '+':
@@ -208,11 +212,8 @@ Token lexer_next_token(Lexer *l) {
                 return make_token(l, TOKEN_MINUS, "-");
         }
 
-        /* ---- unknown character ---- */
-
+        /* ---- unknown ---- */
         advance(l);
         return make_token(l, TOKEN_ERROR, "unknown");
     }
-
-    return make_token(l, TOKEN_EOF, "EOF");
 }
