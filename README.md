@@ -1,2 +1,5 @@
 # ArcScript
-ArcScript is a scripting language built to challenge the boundaries of programming. I'm just kidding im just writing some random BS
+ArcScript is a high level scripting programming language built as a learning experiment to understand how early programming languages were made in c.
+
+## Specifications
+File Extension:. as
