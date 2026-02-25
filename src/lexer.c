@@ -47,3 +47,22 @@ static Token make_token(Lexer *l, TokenType type, const char *text) {
     t.column = l->column;
     return t;
 }
+
+static TokenType keyword_type(const char *id) {
+    if (!strcmp(id,"var")) return TOKEN_VAR;
+    if (!strcmp(id,"const")) return TOKEN_CONST;
+    if (!strcmp(id,"if")) return TOKEN_IF;
+    if (!strcmp(id,"elif")) return TOKEN_ELIF;
+    if (!strcmp(id,"else")) return TOKEN_ELSE;
+    if (!strcmp(id,"while")) return TOKEN_WHILE;
+    if (!strcmp(id,"for")) return TOKEN_FOR;
+    if (!strcmp(id,"func")) return TOKEN_FUNC;
+    if (!strcmp(id,"return")) return TOKEN_RETURN;
+    if (!strcmp(id,"True")) return TOKEN_TRUE;
+    if (!strcmp(id,"False")) return TOKEN_FALSE;
+    if (!strcmp(id,"and")) return TOKEN_AND;
+    if (!strcmp(id,"or")) return TOKEN_OR;
+    if (!strcmp(id,"not")) return TOKEN_NOT;
+
+    return TOKEN_IDENTIFIER;
+}
