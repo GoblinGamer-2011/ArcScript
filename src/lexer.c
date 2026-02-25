@@ -3,6 +3,16 @@
 #include <ctype.h>
 #include "lexer.h"
 
+static char *arc_strndup(const char *src, size_t n) {
+    char *dest = malloc(n + 1);
+    if (!dest) return NULL;
+
+    memcpy(dest, src, n);
+    dest[n] = '\0';
+
+    return dest;
+}
+
 void lexer_init(Lexer *l, const char *source) {
     l->src = source;
     l->pos = 0;
@@ -74,7 +84,7 @@ static Token identifier(Lexer *l) {
         advance(l);
 
     int length = l->pos - start;
-    char *text = strndup(l->src + start, length);
+    char *text = arc_strndup(l->src + start, length);
 
     TokenType type = keyword_type(text);
     Token tok = make_token(l, type, text);
@@ -90,7 +100,7 @@ static Token number(Lexer *l) {
         advance(l);
 
     int length = l->pos - start;
-    char *text = strndup(l->src + start, length);
+    char *text = arc_strndup(l->src + start, length);
 
     Token tok = make_token(l, TOKEN_INT, text);
 
