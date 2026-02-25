@@ -3,15 +3,22 @@
 #include <ctype.h>
 #include "lexer.h"
 
+/* --------------------------------------------------
+   Utility
+-------------------------------------------------- */
+
 static char *arc_strndup(const char *src, size_t n) {
     char *dest = malloc(n + 1);
     if (!dest) return NULL;
 
     memcpy(dest, src, n);
     dest[n] = '\0';
-
     return dest;
 }
+
+/* --------------------------------------------------
+   Lexer core
+-------------------------------------------------- */
 
 void lexer_init(Lexer *l, const char *source) {
     l->src = source;
@@ -33,21 +40,29 @@ static void advance(Lexer *l) {
 }
 
 static char peek(Lexer *l) {
+    if (!l->src[l->pos + 1])
+        return '\0';
     return l->src[l->pos + 1];
 }
 
+/* --------------------------------------------------
+   Skipping
+-------------------------------------------------- */
+
 static void skip_whitespace(Lexer *l) {
-    while (isspace(l->current)) {
+    while (l->current && isspace(l->current))
         advance(l);
-    }
 }
 
 static void skip_comment(Lexer *l) {
-    if (l->current == '/' && peek(l) == '/') {
-        while (l->current && l->current != '\n')
-            advance(l);
-    }
+    // // comment
+    while (l->current && l->current != '\n')
+        advance(l);
 }
+
+/* --------------------------------------------------
+   Token creation
+-------------------------------------------------- */
 
 static Token make_token(Lexer *l, TokenType type, const char *text) {
     Token t;
@@ -57,6 +72,10 @@ static Token make_token(Lexer *l, TokenType type, const char *text) {
     t.column = l->column;
     return t;
 }
+
+/* --------------------------------------------------
+   Keywords
+-------------------------------------------------- */
 
 static TokenType keyword_type(const char *id) {
     if (!strcmp(id,"var")) return TOKEN_VAR;
@@ -76,6 +95,10 @@ static TokenType keyword_type(const char *id) {
 
     return TOKEN_IDENTIFIER;
 }
+
+/* --------------------------------------------------
+   Token scanners
+-------------------------------------------------- */
 
 static Token identifier(Lexer *l) {
     int start = l->pos;
@@ -108,59 +131,88 @@ static Token number(Lexer *l) {
     return tok;
 }
 
+/* --------------------------------------------------
+   MAIN LEXER FUNCTION
+-------------------------------------------------- */
+
 Token lexer_next_token(Lexer *l) {
 
     while (l->current) {
 
+        /* ---- skip junk ---- */
+
         skip_whitespace(l);
 
-        if (l->current == '/' && peek(l) == '/')
+        if (l->current == '/' && peek(l) == '/') {
             skip_comment(l);
-        else
-            break;
+            continue;
+        }
+
+        /* ---- identifiers ---- */
+
+        if (isalpha(l->current) || l->current == '_')
+            return identifier(l);
+
+        /* ---- numbers ---- */
 
         if (isdigit(l->current))
             return number(l);
 
-        if (isalpha(l->current) || l->current == '_')
-            return identifier(l);
+        /* ---- operators / symbols ---- */
 
         switch (l->current) {
 
             case '+':
                 if (peek(l) == '=') {
-                    advance(l); advance(l);
-                    return make_token(l,TOKEN_PLUS_EQUAL,"+=");
+                    advance(l);
+                    advance(l);
+                    return make_token(l, TOKEN_PLUS_EQUAL, "+=");
                 }
                 advance(l);
-                return make_token(l,TOKEN_PLUS,"+");
+                return make_token(l, TOKEN_PLUS, "+");
 
             case '=':
                 advance(l);
-                return make_token(l,TOKEN_EQUAL,"=");
+                return make_token(l, TOKEN_EQUAL, "=");
 
-            case '{': advance(l); return make_token(l,TOKEN_LBRACE,"{");
-            case '}': advance(l); return make_token(l,TOKEN_RBRACE,"}");
-            case '(': advance(l); return make_token(l,TOKEN_LPAREN,"(");
-            case ')': advance(l); return make_token(l,TOKEN_RPAREN,")");
-            case ';': advance(l); return make_token(l,TOKEN_SEMICOLON,";");
+            case '{':
+                advance(l);
+                return make_token(l, TOKEN_LBRACE, "{");
+
+            case '}':
+                advance(l);
+                return make_token(l, TOKEN_RBRACE, "}");
+
+            case '(':
+                advance(l);
+                return make_token(l, TOKEN_LPAREN, "(");
+
+            case ')':
+                advance(l);
+                return make_token(l, TOKEN_RPAREN, ")");
+
+            case ';':
+                advance(l);
+                return make_token(l, TOKEN_SEMICOLON, ";");
 
             case '/':
                 advance(l);
-                return make_token(l,TOKEN_SLASH,"/");
+                return make_token(l, TOKEN_SLASH, "/");
 
             case '*':
                 advance(l);
-                return make_token(l,TOKEN_STAR,"*");
+                return make_token(l, TOKEN_STAR, "*");
 
             case '-':
                 advance(l);
-                return make_token(l,TOKEN_MINUS,"-");
+                return make_token(l, TOKEN_MINUS, "-");
         }
 
+        /* ---- unknown character ---- */
+
         advance(l);
-        return make_token(l,TOKEN_ERROR,"unknown");
+        return make_token(l, TOKEN_ERROR, "unknown");
     }
 
-    return make_token(l,TOKEN_EOF,"EOF");
+    return make_token(l, TOKEN_EOF, "EOF");
 }
