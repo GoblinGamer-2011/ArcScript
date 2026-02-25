@@ -14,7 +14,7 @@ int main() {
     lexer_init(&lexer, source);
 
     Token tok;
-    printf("Enum Value | Token Value | line y col x");
+    printf("Enum Value | Token Value | line y col x\n");
     do {
         tok = lexer_next_token(&lexer);
 
