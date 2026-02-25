@@ -38,3 +38,12 @@ static void skip_comment(Lexer *l) {
             advance(l);
     }
 }
+
+static Token make_token(Lexer *l, TokenType type, const char *text) {
+    Token t;
+    t.type = type;
+    t.lexeme = strdup(text);
+    t.line = l->line;
+    t.column = l->column;
+    return t;
+}
