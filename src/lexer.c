@@ -66,3 +66,87 @@ static TokenType keyword_type(const char *id) {
 
     return TOKEN_IDENTIFIER;
 }
+
+static Token identifier(Lexer *l) {
+    int start = l->pos;
+
+    while (isalnum(l->current) || l->current == '_')
+        advance(l);
+
+    int length = l->pos - start;
+    char *text = strndup(l->src + start, length);
+
+    TokenType type = keyword_type(text);
+    Token tok = make_token(l, type, text);
+
+    free(text);
+    return tok;
+}
+
+static Token number(Lexer *l) {
+    int start = l->pos;
+
+    while (isdigit(l->current))
+        advance(l);
+
+    int length = l->pos - start;
+    char *text = strndup(l->src + start, length);
+
+    Token tok = make_token(l, TOKEN_INT, text);
+
+    free(text);
+    return tok;
+}
+
+Token lexer_next_token(Lexer *l) {
+
+    while (l->current) {
+
+        skip_whitespace(l);
+        skip_comment(l);
+
+        if (isdigit(l->current))
+            return number(l);
+
+        if (isalpha(l->current) || l->current == '_')
+            return identifier(l);
+
+        switch (l->current) {
+
+            case '+':
+                if (peek(l) == '=') {
+                    advance(l); advance(l);
+                    return make_token(l,TOKEN_PLUS_EQUAL,"+=");
+                }
+                advance(l);
+                return make_token(l,TOKEN_PLUS,"+");
+
+            case '=':
+                advance(l);
+                return make_token(l,TOKEN_EQUAL,"=");
+
+            case '{': advance(l); return make_token(l,TOKEN_LBRACE,"{");
+            case '}': advance(l); return make_token(l,TOKEN_RBRACE,"}");
+            case '(': advance(l); return make_token(l,TOKEN_LPAREN,"(");
+            case ')': advance(l); return make_token(l,TOKEN_RPAREN,")");
+            case ';': advance(l); return make_token(l,TOKEN_SEMICOLON,";");
+
+            case '/':
+                advance(l);
+                return make_token(l,TOKEN_SLASH,"/");
+
+            case '*':
+                advance(l);
+                return make_token(l,TOKEN_STAR,"*");
+
+            case '-':
+                advance(l);
+                return make_token(l,TOKEN_MINUS,"-");
+        }
+
+        advance(l);
+        return make_token(l,TOKEN_ERROR,"unknown");
+    }
+
+    return make_token(l,TOKEN_EOF,"EOF");
+}
