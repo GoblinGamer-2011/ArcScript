@@ -113,7 +113,11 @@ Token lexer_next_token(Lexer *l) {
     while (l->current) {
 
         skip_whitespace(l);
-        skip_comment(l);
+
+        if (l->current == '/' && peek(l) == '/')
+            skip_comment(l);
+        else
+            break;
 
         if (isdigit(l->current))
             return number(l);
